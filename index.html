@@ -96,7 +96,7 @@
             const digitalChart = new Chart(digitalCtx, { type: 'line', data: { labels: initialDigitalData.labels, datasets: [{ label: 'Bit', data: initialDigitalData.data, borderColor: '#10b981', borderWidth: 3, stepped: true }] }, options: { ...chartOptions, scales: { y: { ...chartOptions.scales.y, min: -0.2, max: 1.2, ticks: { stepSize: 1, color: '#6b7280' }}, x: { ...chartOptions.scales.x } } } });
             generateDigitalBtn.addEventListener('click', () => { const newData = generateDigitalData(); digitalChart.data.labels = newData.labels; digitalChart.data.datasets[0].data = newData.data; digitalChart.update(); });
             
-            const apiKey = "";
+            const apiKey = "AIzaSyBaMasMeh2pHodPYWyWScy2KDD8hsf_7m0";
             const textApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
             const ttsApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
             let audioContext;
@@ -210,4 +210,5 @@
     </script>
 </body>
 </html>
+
 
