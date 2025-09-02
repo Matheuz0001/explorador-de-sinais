@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explorador de Sinais: Analógico vs. Digital</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony -->
+    <!-- Application Structure Plan: A comparative dashboard structure is used to maximize learning and clarity. The core of the application is a two-column layout that places the analog and digital signals side-by-side. This allows for direct comparison of their visual forms and characteristics. Interactive sliders for the analog signal and a random data generator for the digital signal provide a hands-on experience. Gemini API integration provides dynamic, simplified explanations (now with TTS), real-world examples, and an interactive quiz to test knowledge. The user flow is: 1. Observe/interact with charts. 2. Read static characteristics. 3. Click Gemini buttons for deeper, simplified analogies and listen to them. 4. Explore real-world applications. 5. Test understanding with a generated quiz. -->
+    <!-- Visualization & Content Choices: 
+        - Analog/Digital Signals: Chart.js for interactive visualization.
+        - Gemini Explanations & TTS: Button-triggered text generation with a speaker icon to call the TTS API. Goal -> Simplify topics and add an auditory learning channel. Justification -> Increases accessibility and engagement.
+        - Gemini Real-World Examples: Button-triggered content generation.
+        - Gemini Quiz Generator: Button-triggered JSON generation for a multiple-choice question. Goal -> Reinforce learning interactively. Viz -> Dynamically rendered HTML buttons for options. Justification -> Actively engages the user in the learning process.
+        - Modulation/Demodulation: Static diagram using styled HTML/CSS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; color: #343a40; }
+        .chart-container { position: relative; width: 100%; height: 280px; background-color: #ffffff; border-radius: 0.5rem; padding: 1rem; border: 1px solid #dee2e6; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
+        .control-panel { background-color: #f1f3f5; border-radius: 0.5rem; padding: 1rem; }
+        .btn { transition: all 0.2s ease-in-out; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .gemini-output { background-color: #e6f7ff; border-left: 4px solid #1890ff; padding: 1rem; border-radius: 0.25rem; margin-top: 1rem; min-height: 80px; position: relative; }
+        .gemini-output.digital { background-color: #f6ffed; border-left-color: #52c41a; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 1rem auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .speaker-icon { font-size: 1.5rem; cursor: pointer; position: absolute; top: 0.5rem; right: 0.5rem; color: #6b7280; transition: color 0.2s; }
+        .speaker-icon:hover { color: #1890ff; }
+        .quiz-option { width: 100%; text-align: left; margin-bottom: 0.5rem; background-color: #e9ecef; border: 2px solid transparent; }
+        .quiz-option:hover { background-color: #ced4da; }
+        .quiz-option.correct { background-color: #d4edda; border-color: #c3e6cb; }
+        .quiz-option.incorrect { background-color: #f8d7da; border-color: #f5c6cb; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-800">Explorador Interativo de Sinais</h1>
+            <p class="mt-2 text-lg text-gray-600">Compare, manipule e entenda os sinais.</p>
+        </header>
+
+        <main>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 flex flex-col">
+                    <h2 class="text-3xl font-bold text-blue-600 mb-4 text-center">Sinal Analógico</h2>
+                    <p class="text-gray-700 mb-4 text-center">Um sinal que varia de forma <strong>contínua</strong> no tempo, como uma onda suave.</p>
+                    <div class="chart-container mb-6"><canvas id="analogChart"></canvas></div>
+                    <div class="control-panel mb-6"><h3 class="font-semibold text-lg mb-3 text-gray-800">Controles Interativos</h3><div class="space-y-4"><div><label for="amplitude" class="block mb-1 text-sm font-medium text-gray-700">Amplitude: <span id="amplitudeValue" class="font-bold">1.0</span></label><input id="amplitude" type="range" min="0.2" max="1.5" step="0.1" value="1.0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"></div><div><label for="frequency" class="block mb-1 text-sm font-medium text-gray-700">Frequência: <span id="frequencyValue" class="font-bold">2</span> Hz</label><input id="frequency" type="range" min="1" max="10" step="1" value="2" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"></div></div></div>
+                    <div class="mb-6"><h3 class="font-semibold text-xl mb-3 text-gray-800">Características</h3><ul class="list-disc list-inside space-y-2 text-gray-700"><li><strong>Natureza:</strong> Contínua, sem saltos.</li><li><strong>Representação:</strong> Curva senoidal.</li><li><strong>Exemplos:</strong> Voz humana, rádio AM/FM.</li><li><strong>Suscetibilidade:</strong> Mais vulnerável a ruídos.</li></ul></div>
+                    <div class="mt-auto pt-4 border-t"><h3 class="font-semibold text-lg mb-2 text-gray-800">Entenda Melhor</h3><button id="explainAnalog" class="btn w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-blue-600">Explique como um leigo ✨</button><div id="analogExplanation" class="gemini-output hidden"></div></div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 flex flex-col">
+                    <h2 class="text-3xl font-bold text-green-600 mb-4 text-center">Sinal Digital</h2>
+                    <p class="text-gray-700 mb-4 text-center">Um sinal que varia em estados <strong>discretos</strong> (descontínuos), como degraus.</p>
+                    <div class="chart-container mb-6"><canvas id="digitalChart"></canvas></div>
+                    <div class="control-panel mb-6 flex-grow"><h3 class="font-semibold text-lg mb-3 text-gray-800">Controles Interativos</h3><div class="flex flex-col items-center justify-center h-full"><button id="generateDigital" class="btn bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-green-700">Gerar Nova Sequência de Bits</button><p id="bitSequence" class="mt-4 text-gray-600 font-mono text-center break-all"></p></div></div>
+                    <div class="mb-6"><h3 class="font-semibold text-xl mb-3 text-gray-800">Características</h3><ul class="list-disc list-inside space-y-2 text-gray-700"><li><strong>Natureza:</strong> Binária (0s e 1s).</li><li><strong>Representação:</strong> Ondas quadradas.</li><li><strong>Exemplos:</strong> Dados em computadores, CDs.</li><li><strong>Robustez:</strong> Menos suscetível a ruídos.</li></ul></div>
+                    <div class="mt-auto pt-4 border-t"><h3 class="font-semibold text-lg mb-2 text-gray-800">Entenda Melhor</h3><button id="explainDigital" class="btn w-full bg-green-500 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-green-600">Explique como um leigo ✨</button><div id="digitalExplanation" class="gemini-output digital hidden"></div></div>
+                </div>
+            </div>
+
+            <div class="mt-12 bg-white p-8 rounded-xl shadow-lg border border-gray-200"><h2 class="text-3xl font-bold text-gray-800 mb-4 text-center">A Ponte Entre os Mundos: Modulação</h2><p class="max-w-3xl mx-auto text-center text-gray-700 mb-8">Para que os dados digitais de um computador possam viajar por meios analógicos, eles precisam ser convertidos. Esse processo é fundamental para as telecomunicações.</p><div class="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4 text-center"><div class="flex flex-col items-center"><div class="p-4 bg-green-100 rounded-lg"><span class="text-2xl font-bold text-green-700">Digital</span></div><span class="text-sm text-gray-600 mt-1">Dados Originais (PC)</span></div><div class="text-3xl font-light text-gray-400 transform md:rotate-0 rotate-90">&rarr;</div><div class="flex flex-col items-center"><div class="p-4 bg-gray-100 border-2 border-dashed border-gray-400 rounded-lg"><span class="text-xl font-semibold text-gray-700">MODEM</span><span class="block text-xs text-gray-500">(Modulação)</span></div></div><div class="text-3xl font-light text-gray-400 transform md:rotate-0 rotate-90">&rarr;</div><div class="flex flex-col items-center"><div class="p-4 bg-blue-100 rounded-lg"><span class="text-2xl font-bold text-blue-700">Analógico</span></div><span class="text-sm text-gray-600 mt-1">Sinal no Meio de Transmissão</span></div><div class="text-3xl font-light text-gray-400 transform md:rotate-0 rotate-90">&rarr;</div><div class="flex flex-col items-center"><div class="p-4 bg-gray-100 border-2 border-dashed border-gray-400 rounded-lg"><span class="text-xl font-semibold text-gray-700">MODEM</span><span class="block text-xs text-gray-500">(Demodulação)</span></div></div><div class="text-3xl font-light text-gray-400 transform md:rotate-0 rotate-90">&rarr;</div><div class="flex flex-col items-center"><div class="p-4 bg-green-100 rounded-lg"><span class="text-2xl font-bold text-green-700">Digital</span></div><span class="text-sm text-gray-600 mt-1">Dados no Destino (PC)</span></div></div></div>
+
+            <div class="mt-12 bg-white p-8 rounded-xl shadow-lg border border-gray-200"><h2 class="text-3xl font-bold text-purple-600 mb-4 text-center">Aplicações no Mundo Real</h2><p class="max-w-3xl mx-auto text-center text-gray-700 mb-8">Clique no botão abaixo para que a IA gere uma comparação entre o uso de sinais analógicos e digitais em uma tecnologia que usamos no dia a dia.</p><div class="text-center mb-6"><button id="generateRealWorld" class="btn bg-purple-600 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:bg-purple-700">Gerar Exemplo do Mundo Real</button></div><div id="realWorldContainer" class="gemini-output hidden" style="background-color: #f9f0ff; border-left-color: #722ed1;"></div></div>
+            
+            <div class="mt-12 bg-white p-8 rounded-xl shadow-lg border border-gray-200"><h2 class="text-3xl font-bold text-orange-600 mb-4 text-center">Teste seu Conhecimento</h2><p class="max-w-3xl mx-auto text-center text-gray-700 mb-8">Vamos ver se você entendeu! Clique no botão para gerar uma pergunta de quiz e teste seus conhecimentos.</p><div class="text-center mb-6"><button id="generateQuiz" class="btn bg-orange-500 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:bg-orange-600">Gerar Pergunta do Quiz</button></div><div id="quizContainer" class="hidden"></div></div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const chartOptions = { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: false, grid: { color: '#e5e7eb' }, ticks: { color: '#6b7280' } }, x: { grid: { display: false }, ticks: { color: '#6b7280' } } }, plugins: { legend: { display: false }, tooltip: { enabled: true, backgroundColor: '#333', titleColor: '#fff', bodyColor: '#fff', } }, elements: { point: { radius: 0 } } };
+            const analogCtx = document.getElementById('analogChart').getContext('2d');
+            const amplitudeSlider = document.getElementById('amplitude');
+            const frequencySlider = document.getElementById('frequency');
+            const amplitudeValueSpan = document.getElementById('amplitudeValue');
+            const frequencyValueSpan = document.getElementById('frequencyValue');
+            const generateAnalogData = (amplitude, frequency) => { const data = []; const labels = []; for (let i = 0; i < 100; i++) { labels.push(i.toString()); data.push(Math.sin(i * frequency * 0.1) * amplitude); } return { labels, data }; };
+            let initialAnalogData = generateAnalogData(1.0, 2);
+            const analogChart = new Chart(analogCtx, { type: 'line', data: { labels: initialAnalogData.labels, datasets: [{ label: 'Amplitude', data: initialAnalogData.data, borderColor: '#3b82f6', borderWidth: 3, tension: 0.4 }] }, options: chartOptions });
+            const updateAnalogChart = () => { const amplitude = parseFloat(amplitudeSlider.value); const frequency = parseInt(frequencySlider.value, 10); amplitudeValueSpan.textContent = amplitude.toFixed(1); frequencyValueSpan.textContent = frequency; const newData = generateAnalogData(amplitude, frequency); analogChart.data.datasets[0].data = newData.data; analogChart.update('none'); };
+            amplitudeSlider.addEventListener('input', updateAnalogChart);
+            frequencySlider.addEventListener('input', updateAnalogChart);
+            const digitalCtx = document.getElementById('digitalChart').getContext('2d');
+            const generateDigitalBtn = document.getElementById('generateDigital');
+            const bitSequenceSpan = document.getElementById('bitSequence');
+            const generateDigitalData = () => { const data = []; const labels = []; const sequence = []; let lastValue = Math.round(Math.random()); for (let i = 0; i < 16; i++) { if (Math.random() > 0.3) { lastValue = Math.round(Math.random()); } sequence.push(lastValue); data.push(lastValue); labels.push(i.toString()); } bitSequenceSpan.textContent = "Sequência: " + sequence.join(' '); return { labels, data }; };
+            let initialDigitalData = generateDigitalData();
+            const digitalChart = new Chart(digitalCtx, { type: 'line', data: { labels: initialDigitalData.labels, datasets: [{ label: 'Bit', data: initialDigitalData.data, borderColor: '#10b981', borderWidth: 3, stepped: true }] }, options: { ...chartOptions, scales: { y: { ...chartOptions.scales.y, min: -0.2, max: 1.2, ticks: { stepSize: 1, color: '#6b7280' }}, x: { ...chartOptions.scales.x } } } });
+            generateDigitalBtn.addEventListener('click', () => { const newData = generateDigitalData(); digitalChart.data.labels = newData.labels; digitalChart.data.datasets[0].data = newData.data; digitalChart.update(); });
+            
+            const apiKey = "";
+            const textApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            const ttsApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+            let audioContext;
+            let currentAudio = null;
+
+            function base64ToArrayBuffer(base64) { const binaryString = window.atob(base64); const len = binaryString.length; const bytes = new Uint8Array(len); for (let i = 0; i < len; i++) { bytes[i] = binaryString.charCodeAt(i); } return bytes.buffer; }
+            function pcmToWav(pcmData, sampleRate) { const pcm16 = new Int16Array(pcmData); const header = new ArrayBuffer(44); const view = new DataView(header); writeString(view, 0, 'RIFF'); view.setUint32(4, 36 + pcm16.byteLength, true); writeString(view, 8, 'WAVE'); writeString(view, 12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true); view.setUint32(24, sampleRate, true); view.setUint32(28, sampleRate * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true); writeString(view, 36, 'data'); view.setUint32(40, pcm16.byteLength, true); return new Blob([view, pcm16], { type: 'audio/wav' }); function writeString(view, offset, string) { for (let i = 0; i < string.length; i++) { view.setUint8(offset + i, string.charCodeAt(i)); } } }
+
+            async function callGemini(prompt, outputElement, isJson = false) {
+                outputElement.classList.remove('hidden');
+                outputElement.innerHTML = '<div class="loader"></div>';
+                try {
+                    const payload = { contents: [{ parts: [{ text: prompt }] }] };
+                    if (isJson) {
+                        payload.generationConfig = { responseMimeType: "application/json", responseSchema: { type: "OBJECT", properties: { "question": { "type": "STRING" }, "options": { "type": "ARRAY", "items": { "type": "STRING" } }, "answer": { "type": "STRING" } }, required: ["question", "options", "answer"] } };
+                    }
+                    const response = await fetch(textApiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
+                    const result = await response.json();
+                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (text) {
+                        return isJson ? JSON.parse(text) : text;
+                    } else {
+                        throw new Error('No content received from API.');
+                    }
+                } catch (error) {
+                    console.error("Gemini API call failed:", error);
+                    outputElement.innerHTML = 'Ocorreu um erro ao contatar a IA.';
+                    return null;
+                }
+            }
+            
+            async function callGeminiTTS(text, speakerIcon) {
+                if (currentAudio && !currentAudio.paused) { currentAudio.pause(); currentAudio = null; speakerIcon.innerText = '🔊'; return; }
+                speakerIcon.innerText = '⏳';
+                try {
+                    const payload = { model: "gemini-2.5-flash-preview-tts", contents: [{ parts: [{ text }] }], generationConfig: { responseModalities: ["AUDIO"] } };
+                    const response = await fetch(ttsApiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
+                    const result = await response.json();
+                    const audioData = result.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+                    const mimeType = result.candidates?.[0]?.content?.parts?.[0]?.inlineData?.mimeType;
+                    if (audioData && mimeType && mimeType.startsWith("audio/")) {
+                        const sampleRate = parseInt(mimeType.match(/rate=(\d+)/)[1], 10);
+                        const pcmData = base64ToArrayBuffer(audioData);
+                        const wavBlob = pcmToWav(pcmData, sampleRate);
+                        const audioUrl = URL.createObjectURL(wavBlob);
+                        currentAudio = new Audio(audioUrl);
+                        currentAudio.play();
+                        speakerIcon.innerText = '⏹️';
+                        currentAudio.onended = () => { speakerIcon.innerText = '🔊'; currentAudio = null; };
+                    } else { throw new Error('Invalid audio data received.'); }
+                } catch (error) {
+                    console.error("Gemini TTS call failed:", error);
+                    speakerIcon.innerText = '🔊';
+                }
+            }
+
+            function setupExplanation(btnId, outputId, prompt) {
+                const btn = document.getElementById(btnId);
+                const outputDiv = document.getElementById(outputId);
+                btn.addEventListener('click', async () => {
+                    const responseText = await callGemini(prompt, outputDiv);
+                    if (responseText) {
+                        outputDiv.innerHTML = `<span class="speaker-icon">🔊</span><div class="text-content pr-8">${responseText.replace(/\n/g, '<br>')}</div>`;
+                        outputDiv.querySelector('.speaker-icon').addEventListener('click', (e) => {
+                            const textToSpeak = e.target.nextElementSibling.innerText;
+                            callGeminiTTS(textToSpeak, e.target);
+                        });
+                    }
+                });
+            }
+
+            setupExplanation('explainAnalog', 'analogExplanation', "Explique o que é um sinal analógico para um completo leigo. Use uma analogia simples do dia a dia, como uma rampa suave ou o botão de volume de um rádio antigo. Mantenha a explicação curta, em português, e fácil de entender, em no máximo 3 frases.");
+            setupExplanation('explainDigital', 'digitalExplanation', "Explique o que é um sinal digital para um completo leigo. Use uma analogia simples do dia a dia, como um interruptor de luz (ligado/desligado) ou degraus de uma escada. Mantenha a explicação curta, em português, e fácil de entender, em no máximo 3 frases.");
+            setupExplanation('generateRealWorld', 'realWorldContainer', "Compare o uso de sinais analógicos e digitais em uma tecnologia do mundo real. Forneça um exemplo claro, como 'Discos de Vinil (Analógico) vs. Streaming de Música (Digital)'. Descreva brevemente como cada sinal é usado no exemplo em português. Formate a resposta com um título em negrito para o exemplo e depois a explicação.");
+            
+            const generateQuizBtn = document.getElementById('generateQuiz');
+            const quizContainer = document.getElementById('quizContainer');
+            generateQuizBtn.addEventListener('click', async () => {
+                const prompt = "Gere uma pergunta de quiz simples, de múltipla escolha, em português, sobre a diferença entre sinais analógicos e digitais. Forneça a pergunta, um array de 4 opções, e o texto da resposta correta. Retorne como um objeto JSON com as chaves 'question', 'options' e 'answer'.";
+                const quizData = await callGemini(prompt, quizContainer, true);
+                if (quizData) {
+                    renderQuiz(quizData);
+                }
+            });
+
+            function renderQuiz({ question, options, answer }) {
+                quizContainer.classList.remove('hidden');
+                let optionsHtml = options.map(option => `<button class="btn quiz-option p-3 rounded-lg">${option}</button>`).join('');
+                quizContainer.innerHTML = `<h3 class="text-xl font-semibold mb-4">${question}</h3><div>${optionsHtml}</div><p id="quizFeedback" class="mt-4 font-semibold"></p>`;
+                const optionButtons = quizContainer.querySelectorAll('.quiz-option');
+                optionButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        optionButtons.forEach(btn => btn.disabled = true);
+                        const feedback = document.getElementById('quizFeedback');
+                        if (button.innerText === answer) {
+                            button.classList.add('correct');
+                            feedback.innerText = 'Correto! 🎉';
+                            feedback.className = 'mt-4 font-semibold text-green-600';
+                        } else {
+                            button.classList.add('incorrect');
+                            feedback.innerText = `Incorreto. A resposta certa é "${answer}".`;
+                            feedback.className = 'mt-4 font-semibold text-red-600';
+                            optionButtons.forEach(btn => { if (btn.innerText === answer) btn.classList.add('correct'); });
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>
+
